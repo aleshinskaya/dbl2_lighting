@@ -112,7 +112,7 @@ void setup() {
   lx.engine.setThreaded(false);
   // Set the patterns
   engine.setPatterns(new LXPattern[] {
-    new annaPattern(lx),
+    new visualStream(lx),
     new TestImagePattern(lx),
     new HelloWorldPattern(lx),
     new GradientPattern(lx),

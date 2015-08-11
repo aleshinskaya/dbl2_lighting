@@ -76,6 +76,15 @@ public static class Model extends LXModel {
     Node randomnode = this.nodemap.get(randomnodekey);
     return randomnode;
   }
+  
+   public Node getFirstNode_rh() {
+    
+    List<String> nodekeys = new ArrayList<String>(this.nodemap.keySet());
+    String randomnodekey = nodekeys.get(19);
+    Node randomnode = this.nodemap.get(randomnodekey);
+    return randomnode;
+  }
+
 
   /**
   * Gets a random bar from the model

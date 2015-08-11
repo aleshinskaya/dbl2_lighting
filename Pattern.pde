@@ -5,39 +5,53 @@
 * Hackathon patterns go here!
 * @author: You. 
 */
-class annaPattern extends BrainPattern { 
+class visualStream extends BrainPattern { 
   
   Node firstNode;
-  public final BasicParameter colorSpread = new BasicParameter("Clr", 0.5, 0, 3);
- BasicParameter xPer = new BasicParameter("XPD",6000,5000,20000);
-   BasicParameter yPer = new BasicParameter("YPD",6000,5000,20000);
-   SawLFO linenvx = new SawLFO(0.0,1.0,xPer);
-   SawLFO linenvy = new SawLFO(0.0,1.0,yPer);
- 
- public final SinLFO xPeriod = new SinLFO(3400, 7900, 11000); 
- public final SinLFO brightness = new SinLFO(model.xMin, model.xMax, xPeriod);
-
-////  private final SinLFO brightnessX = new SinLFO(model.xMin, model.xMax, xPeriod);
-  private final BasicParameter colorFade = new BasicParameter("Fade", 0.95, 0.9, 1.0);
-  public PVector destination; 
-  //define direction vector, i.e.  , destination
-  public final ArrayList<Node> streamPath; 
+  Node firstNode_rh;
   
+  public final ArrayList<Node> streamPath; 
+  public PVector destination; 
+  
+  public final ArrayList<Node> streamPath2; 
+  public PVector destination2; 
+  
+  public final ArrayList<Node> streamPath3; 
+  public PVector destination3; 
+  
+  public final ArrayList<Node> streamPath4; 
+  public PVector destination4; 
+  
+//sine wave modulator
+  private final BasicParameter colorRange = new BasicParameter("colRange",  -80, 100, -100);
+  private final BasicParameter colorRange2 = new BasicParameter("colRange2",  250, 100, 300);
+  private final SinLFO whatColor = new SinLFO(colorRange2,colorRange, 2000);
+
     
- public annaPattern(LX lx){
+ public visualStream (LX lx){
    
    super(lx);
-    addParameter(colorSpread);    
-    addModulator(linenvx).start();
-    addModulator(linenvy).start();
-    addParameter(xPer);
-    addParameter(yPer);
-     addModulator(xPeriod).start();
-     addModulator(brightness).start();
-    firstNode = model.getFirstNode();
-  //try the sawlfo modulator next
-    destination = new PVector(-100,-100,-100);
+   addParameter(colorRange);   
+   addParameter(colorRange2);
+   addModulator(whatColor).trigger();
+   
+   
+   firstNode = model.getFirstNode();
+   destination = new PVector(-100,-100,-100);
+   destination2 = new PVector(-70,-80,90);   
+   destination3 = new PVector(100,-100,-100);
+   destination4 = new PVector(70,-80,90);
   
+   firstNode_rh = model.getFirstNode_rh();
+  
+   //showfirst node RH
+  List<Bar> barlistRH;
+  barlistRH = firstNode_rh.adjacent_bars();
+  for (Bar b: barlistRH) {
+        for (LXPoint p: b.points){
+          colors[p.index]=lx.hsb(350,100,100);
+        }
+     }
   //makes a dark blue brain to start with
   for (LXPoint p : model.points) {
     float h=250; //hue
@@ -46,8 +60,11 @@ class annaPattern extends BrainPattern {
     colors[p.index]=lx.hsb(h,s,b); //sets colors of the node, point has attribute index
     }
   
+  
+  
+  //VENTRAL STREAM LH
   //defines the vector of nodes along path we want
-   streamPath = new ArrayList();
+  streamPath = new ArrayList();
   PVector whereamI;
   Node nextNode;
   float howFarFromGoal;
@@ -62,7 +79,7 @@ class annaPattern extends BrainPattern {
   barlist = firstNode.adjacent_bars();
   for (Bar b: barlist) {
         for (LXPoint p: b.points){
-          colors[p.index]=lx.hsb(200,100,100);
+          colors[p.index]=lx.hsb(250,100,100);
         }
      }
     
@@ -79,34 +96,358 @@ class annaPattern extends BrainPattern {
     howFarFromGoal = PVector.dist(whereamI,destination);
     println(howFarFromGoal);
     //nextNode now becomes First Node, until destination is reached.
-      firstNode = nextNode;
+   firstNode = nextNode;
    //add to array
    streamPath.add(nextNode);
   }//end while 
+  
+  
+  
+  //DORSAL STREAM LH
+  //defines the vector of nodes along path we want
+  streamPath2 = new ArrayList();
+  howFarFromGoal = 100;
+  firstNode = model.getFirstNode();
+ 
+  
+  while (howFarFromGoal>55 && firstNode.y != model.yMin && firstNode.y != model.xMin){
+   
+  //to demo it, colors each node light blue
+   
+  //start with coloring first node
+ List<Bar> barlist;
+  barlist = firstNode.adjacent_bars();
+  for (Bar b: barlist) {
+        for (LXPoint p: b.points){
+          colors[p.index]=lx.hsb(150,100,100);
+        }
+     }
+    
+   //pass to getNextNode
+    nextNode = getNextNode(destination2, firstNode);
+    whereamI = new PVector(nextNode.x,nextNode.y,nextNode.z);
+     
+   //ok now color the points to the next node
+    List<LXPoint> bar_points = nodeToNodePoints(firstNode,nextNode);
+    for (LXPoint p: bar_points) {
+          colors[p.index]=lx.hsb(200,100,100);
+        }
+     
+     //evaluate how far from goal   
+    howFarFromGoal = PVector.dist(whereamI,destination2);
+    println(howFarFromGoal);
+    //nextNode now becomes First Node, until destination is reached.
+   firstNode = nextNode;
+   //add to array
+   streamPath2.add(nextNode);
+  }//end while 
+  
+  
+  //VENTRAL STREAM RH
+  //defines the vector of nodes along path we want
+  streamPath3 = new ArrayList();
+  howFarFromGoal = 100;
+  firstNode = model.getFirstNode_rh();
+ 
+  
+  while (howFarFromGoal>55 && firstNode.y != model.yMin && firstNode.y != model.xMin){
+   
+  //to demo it, colors each node light blue
+   
+  //start with coloring first node
+ List<Bar> barlist;
+  barlist = firstNode.adjacent_bars();
+  for (Bar b: barlist) {
+        for (LXPoint p: b.points){
+          colors[p.index]=lx.hsb(150,100,100);
+        }
+     }
+    
+   //pass to getNextNode
+    nextNode = getNextNode(destination3, firstNode);
+    whereamI = new PVector(nextNode.x,nextNode.y,nextNode.z);
+     
+   //ok now color the points to the next node
+    List<LXPoint> bar_points = nodeToNodePoints(firstNode,nextNode);
+    for (LXPoint p: bar_points) {
+          colors[p.index]=lx.hsb(200,100,100);
+        }
+     
+     //evaluate how far from goal   
+    howFarFromGoal = PVector.dist(whereamI,destination3);
+    println(howFarFromGoal);
+    //nextNode now becomes First Node, until destination is reached.
+   firstNode = nextNode;
+   //add to array
+   streamPath3.add(nextNode);
+  }//end while 
+  
+  
+  //DORSAL STREAM RH
+  //defines the vector of nodes along path we want
+  streamPath4 = new ArrayList();
+  howFarFromGoal = 100;
+  firstNode = model.getFirstNode_rh();
+ 
+  
+  while (howFarFromGoal>55 && firstNode.y != model.yMin && firstNode.y != model.xMin){
+   
+  //to demo it, colors each node light blue
+   
+  //start with coloring first node
+ List<Bar> barlist;
+  barlist = firstNode.adjacent_bars();
+  for (Bar b: barlist) {
+        for (LXPoint p: b.points){
+          colors[p.index]=lx.hsb(150,100,100);
+        }
+     }
+    
+   //pass to getNextNode
+    nextNode = getNextNode(destination4, firstNode);
+    whereamI = new PVector(nextNode.x,nextNode.y,nextNode.z);
+     
+   //ok now color the points to the next node
+    List<LXPoint> bar_points = nodeToNodePoints(firstNode,nextNode);
+    for (LXPoint p: bar_points) {
+          colors[p.index]=lx.hsb(200,100,100);
+        }
+     
+     //evaluate how far from goal   
+    howFarFromGoal = PVector.dist(whereamI,destination4);
+    println(howFarFromGoal);
+    //nextNode now becomes First Node, until destination is reached.
+   firstNode = nextNode;
+   //add to array
+   streamPath4.add(nextNode);
+  }//end while 
+  
+  
  }
  
 public void run (double deltaMS) {
   //for the set of items:
   //modulate base hue from modulator
-  //adjust by order to spread it, very incrementally
+  //adjust by order to spread it forward along vector
+  
   List<Bar> barlist;
-  int count = 1;
-//  Collections.reverse(streamPath);
-
+  int count = 0;
+  Node spreadNode;
+  List<Bar> spreadBarlist;
+  List<LXPoint> barlist_spread;
+  float startCol;
+  float lastCol =0;
+  PVector destination_spread = new PVector(destination.x,destination.y+50,destination.z-50);
+  
+ 
+    
   for (Node n: streamPath){
-      count++;
+    
+     count++;
      barlist = n.adjacent_bars();
+     startCol = max((whatColor.getValuef()+10*count),10); //start color for this node
+     
+     //the bars/points on this node
      for (Bar b: barlist) {
-        for (LXPoint p: b.points){
-
-          colors[p.index]=lx.hsb(
-              100 - (linenvy.getValuef() * 100 * count ) ,
-              100,100);
+         for (LXPoint p: b.points){      
+         
+          float distanceFromCenter = dist(p.x, p.y, n.x, n.y);   
+          //spread of color along its pars
+         colors[p.index]=lx.hsb(min(startCol + 1.5*distanceFromCenter,250), 100,100);
+       
+//        float distanceFromBrightness = dist(p.x, abs(p.y - model.cy), brightnessX.getValuef(), yWave);
+       
+          lastCol = colors[p.index];
+         
         }
+        
      }
+      
+    
+     //points & bars on random adjacent node
+     //for now -- make a bit random here
+     //otherwise could take orthogonal direction to one in which we are going!!  
+     //to be fancy, can add fade proportionate to distance
+      
+       spreadNode = getNextNode(destination_spread, n);
+       spreadBarlist =spreadNode.adjacent_bars();
+       barlist_spread = nodeToNodePoints(n,spreadNode);
+       
+      for (Bar sb: spreadBarlist) {
+        for (LXPoint sp: sb.points){
+            
+          float distanceFromCenter = dist(sp.x, sp.y, n.x,n.y);   
+          
+            colors[sp.index]=lx.hsb(min(startCol + 1.5*distanceFromCenter,250), 100,80);
+           
+          
+        }
+      }
     
    
   }
+  
+  
+  lastCol =0;
+  destination_spread = new PVector(destination2.x,destination2.y+20,destination2.z+20);
+  int maxCol = 10;
+  float randInt = Math.round(Math.random());
+      
+  for (Node n: streamPath2){
+    
+     count++;
+     barlist = n.adjacent_bars();
+     int initCol = Math.round(whatColor.getValuef()+10*count);
+     startCol = max(initCol,maxCol); //start color for this node
+     
+     //the bars/points on this node
+     for (Bar b: barlist) {
+         for (LXPoint p: b.points){      
+         
+          float distanceFromCenter = dist(p.x, p.y, n.x, n.y);   
+          //spread of color along its pars
+         colors[p.index]=lx.hsb(min(startCol + 1.5*distanceFromCenter,250), 100,100);
+       
+//        float distanceFromBrightness = dist(p.x, abs(p.y - model.cy), brightnessX.getValuef(), yWave);
+       
+          lastCol = colors[p.index];
+         
+        }
+        
+     }
+      
+    
+     //points & bars on random adjacent node
+     //for now -- make a bit random here
+     //otherwise could take orthogonal direction to one in which we are going!!  
+     //to be fancy, can add fade proportionate to distance
+      
+       spreadNode = getNextNode(destination_spread, n);
+       spreadBarlist =spreadNode.adjacent_bars();
+       barlist_spread = nodeToNodePoints(n,spreadNode);
+       
+      for (Bar sb: spreadBarlist) {
+        for (LXPoint sp: sb.points){
+            
+          float distanceFromCenter = dist(sp.x, sp.y, n.x,n.y);   
+          
+            colors[sp.index]=lx.hsb(min(startCol + 1.5*distanceFromCenter,250), 100,80);
+           
+          
+        }
+      }
+    
+   
+  }
+  
+  
+  //STREAM PATH 3 - RH VENTRAL STREAM
+  
+  lastCol =0;
+  destination_spread = new PVector(destination3.x,destination3.y+50,destination3.z-50);
+  randInt = Math.round(Math.random());
+
+  for (Node n: streamPath3){
+    
+     count++;
+     barlist = n.adjacent_bars();
+   int initCol = Math.round(whatColor.getValuef()+6*count);
+   startCol = max(initCol,maxCol); //start color for this node
+     
+     //the bars/points on this node
+     for (Bar b: barlist) {
+         for (LXPoint p: b.points){      
+         
+          float distanceFromCenter = dist(p.x, p.y, n.x, n.y);   
+          //spread of color along its pars
+         colors[p.index]=lx.hsb(min(startCol + 1.5*distanceFromCenter,250), 100,100);
+       
+//        float distanceFromBrightness = dist(p.x, abs(p.y - model.cy), brightnessX.getValuef(), yWave);
+       
+          lastCol = colors[p.index];
+         
+        }
+        
+     }
+      
+    
+     //points & bars on random adjacent node
+     //for now -- make a bit random here
+     //otherwise could take orthogonal direction to one in which we are going!!  
+     //to be fancy, can add fade proportionate to distance
+      
+       spreadNode = getNextNode(destination_spread, n);
+       spreadBarlist =spreadNode.adjacent_bars();
+       barlist_spread = nodeToNodePoints(n,spreadNode);
+       
+      for (Bar sb: spreadBarlist) {
+        for (LXPoint sp: sb.points){
+            
+          float distanceFromCenter = dist(sp.x, sp.y, n.x,n.y);   
+          
+            colors[sp.index]=lx.hsb(min(startCol + 1.5*distanceFromCenter,250), 100,80);
+           
+          
+        }
+      }
+    
+   
+  }
+  
+  //STREAM PATH 4 - DORSAL STREAM RH
+  
+  lastCol =0;
+  destination_spread = new PVector(destination4.x,destination4.y+20,destination4.z+20);
+  randInt = Math.round((Math.random() * 10) + 1);
+  
+  for (Node n: streamPath4){
+    
+     count++;
+     barlist = n.adjacent_bars();
+     int initCol = Math.round(whatColor.getValuef()+6*count);
+     startCol = max(initCol,maxCol); //start color for this node
+     
+     //the bars/points on this node
+     for (Bar b: barlist) {
+         for (LXPoint p: b.points){      
+         
+          float distanceFromCenter = dist(p.x, p.y, n.x, n.y);   
+          //spread of color along its pars
+         colors[p.index]=lx.hsb(min(startCol + 1.5*distanceFromCenter,250), 100,100);
+       
+//        float distanceFromBrightness = dist(p.x, abs(p.y - model.cy), brightnessX.getValuef(), yWave);
+       
+          lastCol = colors[p.index];
+         
+        }
+        
+     }
+      
+    
+     //points & bars on random adjacent node
+     //for now -- make a bit random here
+     //otherwise could take orthogonal direction to one in which we are going!!  
+     //to be fancy, can add fade proportionate to distance
+      
+       spreadNode = getNextNode(destination_spread, n);
+       spreadBarlist =spreadNode.adjacent_bars();
+       barlist_spread = nodeToNodePoints(n,spreadNode);
+       
+      for (Bar sb: spreadBarlist) {
+        for (LXPoint sp: sb.points){
+            
+          float distanceFromCenter = dist(sp.x, sp.y, n.x,n.y);   
+          
+            colors[sp.index]=lx.hsb(min(startCol + 1.5*distanceFromCenter,250), 100,80);
+           
+          
+        }
+      }
+    
+   
+  }
+
+  
 }
 } 
 
